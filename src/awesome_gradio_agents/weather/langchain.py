@@ -1,9 +1,7 @@
 import os
-from typing import Any
 
 import gradio as gr
 import requests
-from langchain import hub
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI

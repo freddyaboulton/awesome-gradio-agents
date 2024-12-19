@@ -1,10 +1,9 @@
 import json
 import os
-from typing import Any
 
 import gradio as gr
 import requests
-from transformers import ReactCodeAgent, Tool, tool
+from transformers import ReactCodeAgent, tool
 from transformers.agents import HfApiEngine, stream_to_gradio
 
 
