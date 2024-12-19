@@ -1,0 +1,65 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "awesome-gradio-agents"
+version = "0.0.1rc1"
+description = 'Awesome LLM Agents UIs built with Gradio and your favorite agent frameworks.'
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "freddyaboulton", email = "alfonsoboulton@gmail.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = ["gradio>=5.0"]
+
+[project.optional-dependencies]
+transformers = ["transformers>=4.47.0"]
+pydantic_ai = ["pydantic-ai"]
+langchain = ["langchain", "langchain-openai", "langgraph"]
+all = ["transformers", "pydantic_ai", "langchain", "langchain-openai", "langgraph"]
+
+[project.urls]
+Documentation = "https://github.com/freddyaboulton/awesome-gradio-agents#readme"
+Issues = "https://github.com/freddyaboulton/awesome-gradio-agents/issues"
+Source = "https://github.com/freddyaboulton/awesome-gradio-agents"
+
+[tool.hatch.version]
+path = "src/awesome_gradio_agents/__about__.py"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/awesome_gradio_agents tests}"
+
+[tool.coverage.run]
+source_pkgs = ["awesome_gradio_agents", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/awesome_gradio_agents/__about__.py",
+]
+
+[tool.coverage.paths]
+awesome_gradio_agents = ["src/awesome_gradio_agents", "*/awesome-gradio-agents/src/awesome_gradio_agents"]
+tests = ["tests", "*/awesome-gradio-agents/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
