@@ -1,12 +1,12 @@
-from langchain import hub
 import os
-from langchain_openai import ChatOpenAI
 from typing import Any
-import requests
+
 import gradio as gr
+import requests
+from langchain import hub
+from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 
@@ -35,6 +35,7 @@ def get_lat_lng(location_description: str) -> dict[str, float]:
         return {"lat": data[0]["lat"], "lng": data[0]["lon"]}
     else:
         raise ValueError("Could not find the location")
+
 
 @tool
 def get_weather(lat: float, lng: float) -> dict[str, str]:
@@ -86,9 +87,10 @@ def get_weather(lat: float, lng: float) -> dict[str, str]:
         8000: "Thunderstorm",
     }
     return {
-            "temperature": f'{values["temperatureApparent"]:0.0f}°C',
-            "description": code_lookup.get(values["weatherCode"], "Unknown"),
-        }
+        "temperature": f'{values["temperatureApparent"]:0.0f}°C',
+        "description": code_lookup.get(values["weatherCode"], "Unknown"),
+    }
+
 
 llm = ChatOpenAI(temperature=0, model="gpt-4o-mini")
 
@@ -96,7 +98,6 @@ llm = ChatOpenAI(temperature=0, model="gpt-4o-mini")
 memory = MemorySaver()
 tools = [get_lat_lng, get_weather]
 agent_executor = create_react_agent(llm, tools, checkpointer=memory)
-
 
 
 def stream_from_agent(prompt: str, chatbot, past_messages: list):
@@ -117,14 +118,24 @@ def stream_from_agent(prompt: str, chatbot, past_messages: list):
                     yield gr.skip(), chatbot, gr.skip()
                 for tool_call in msg.tool_calls:
                     chatbot.append(
-                        dict(role="assistant", content=f"Parameters: {tool_call['args']}\n",
-                                        metadata={"title": f"🛠️ Using f{tool_call['name']}", "id": tool_call["id"]}))
-                    yield gr.skip(), chatbot, gr.skip()   
+                        dict(
+                            role="assistant",
+                            content=f"Parameters: {tool_call['args']}\n",
+                            metadata={
+                                "title": f"🛠️ Using f{tool_call['name']}",
+                                "id": tool_call["id"],
+                            },
+                        )
+                    )
+                    yield gr.skip(), chatbot, gr.skip()
         if chunk.get("tools"):
             for tool_response in chunk["tools"]["messages"]:
                 past_messages.append(tool_response)
                 for message in chatbot:
-                    if message.get("metadata", {}).get("id") == tool_response.tool_call_id:
+                    if (
+                        message.get("metadata", {}).get("id")
+                        == tool_response.tool_call_id
+                    ):
                         message["content"] += f"Result: {tool_response.content}"
                         yield gr.skip(), chatbot, gr.skip()
         yield gr.update(interactive=True), chatbot, past_messages

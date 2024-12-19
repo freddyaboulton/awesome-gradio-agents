@@ -8,7 +8,7 @@ from typing import Any
 import gradio as gr
 from httpx import AsyncClient
 from pydantic_ai import Agent, ModelRetry, RunContext
-from pydantic_ai.messages import ToolReturnPart, ToolCallPart
+from pydantic_ai.messages import ToolCallPart, ToolReturnPart
 
 
 @dataclass
@@ -131,9 +131,14 @@ async def stream_from_agent(prompt: str, chatbot: list[dict], past_messages: lis
         for message in result.new_messages():
             for call in message.parts:
                 if isinstance(call, ToolCallPart):
+                    call_args = (
+                        call.args.args_json
+                        if hasattr(call.args, "args_json")
+                        else json.dumps(call.args.args_dict)
+                    )
                     gr_message = {
                         "role": "assistant",
-                        "content": "",
+                        "content": "Parameters: " + call_args,
                         "metadata": {
                             "title": f"🛠️ Using {TOOL_TO_DISPLAY_NAME[call.tool_name]}",
                             "id": call.tool_call_id,
@@ -146,8 +151,8 @@ async def stream_from_agent(prompt: str, chatbot: list[dict], past_messages: lis
                             gr_message.get("metadata", {}).get("id", "")
                             == call.tool_call_id
                         ):
-                            gr_message["content"] = (
-                                f"Output: {json.dumps(call.content)}"
+                            gr_message["content"] += (
+                                f"\nOutput: {json.dumps(call.content)}"
                             )
                 yield gr.skip(), chatbot, gr.skip()
         chatbot.append({"role": "assistant", "content": ""})
