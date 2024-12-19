@@ -8,7 +8,6 @@ from typing import AsyncGenerator
 import asyncpg
 import gradio as gr
 import pydantic_core
-import requests
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
