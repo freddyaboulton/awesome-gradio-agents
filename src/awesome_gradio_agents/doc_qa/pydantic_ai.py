@@ -124,7 +124,7 @@ async def stream_from_agent(prompt: str, chatbot: list[dict], past_messages: lis
                         print(call_args)
                         gr_message = {
                             "role": "assistant",
-                            "content": "",
+                            "content": f"Using args {call_args}",
                             "metadata": {
                                 "title": f"🔍 Retrieving Relevant Docs",
                                 "id": call.tool_call_id,
@@ -143,9 +143,14 @@ async def stream_from_agent(prompt: str, chatbot: list[dict], past_messages: lis
                                         call.content
                                     )
                                     if d["id"] in tool_result.ids:
-                                        paths.append(d["path"])
-                                paths = "\n".join(list(set(paths)))
-                                gr_message["content"] = f"Relevant Context:\n {paths}"
+                                        child_message = {
+                                            "role": "assistant",
+                                            "content": f'{d["content"]}',
+                                            "metadata": {"title": f"📖 {d["path"]}",
+                                                         "id": d["id"],
+                                                         "parent_id": call.tool_call_id},
+                                        }
+                                        chatbot.append(child_message)
                     yield gr.skip(), chatbot, gr.skip()
             chatbot.append({"role": "assistant", "content": ""})
             async for message in result.stream_text():
